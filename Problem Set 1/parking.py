@@ -46,8 +46,9 @@ class ParkingProblem(Problem[ParkingState, ParkingAction]):
             # get the car character
             car_letter = chr(i + ord("A"))
             # get the current position of the car
-            car_coordinates = self.find_element_indices(state, car_letter)
-            car_position = Point(car_coordinates[1], car_coordinates[0])
+            car_coordinates = self.find_element_indices(state, car_letter) #index of the car in the state
+            car_position = Point(car_coordinates[1], car_coordinates[0]) #convert the index to point
+            # check if the car is in the slot and if it is not the same slot of the car, then it is not a goal
             if car_position not in self.slots.keys() or (
                 car_position in self.slots.keys()
                 and state[car_position.y][car_position.x]
@@ -65,6 +66,7 @@ class ParkingProblem(Problem[ParkingState, ParkingAction]):
             # get the current position of the car
             car_coordinates = self.find_element_indices(state, car_letter)
             car_position = Point(car_coordinates[1], car_coordinates[0])
+            # for each direction check if it is a valid action
             for direction in Direction:
                 new_position = car_position + direction.to_vector()
                 if (
@@ -104,7 +106,7 @@ class ParkingProblem(Problem[ParkingState, ParkingAction]):
         if car_position in self.slots.keys():
             state[car_position.y][car_position.x] = self.slots[car_position]
         else:
-            state[car_position.y][car_position.x] = "."
+            state[car_position.y][car_position.x] = "." # empty slot
         state[new_position.y][new_position.x] = chr(action[0] + ord("A"))
         return state
 
