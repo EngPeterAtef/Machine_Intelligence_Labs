@@ -25,6 +25,12 @@ class CustomPriorityQueue:
     def is_empty(self):
         return len(self.elements) == 0
 
+    def getItem(self, item):
+        for i in self.elements:
+            if i[2] == item:
+                return i
+        return None
+
 
 # All search functions take a problem and a state
 # If it is an informed search function, it will also receive a heuristic function
@@ -56,7 +62,6 @@ def BreadthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
             child = problem.get_successor(node, action)
             # If the child is not explored and not in the frontier
             if child not in explored and child not in [i[0] for i in frontier]:
-                # print("child: ", child)
                 # If the child is the goal
                 if problem.is_goal(child):
                     return actions + [action]
@@ -106,7 +111,10 @@ def UniformCostSearch(problem: Problem[S, A], initial_state: S) -> Solution:
     # While there are nodes to explore
     while frontier:
         # Get the next node
-        c, node, actions = frontier.pop()
+        res = frontier.pop()
+        if not res:
+            return None
+        (c, _, (node, actions)) = res
         # If the node is the goal
         if problem.is_goal(node):
             return actions
@@ -118,21 +126,27 @@ def UniformCostSearch(problem: Problem[S, A], initial_state: S) -> Solution:
             child = problem.get_successor(node, action)
             # calculate the action cost
             action_cost = problem.get_cost(node, action)
+            # search for the child in the frontier
+            old_child = None
+            for i in frontier.elements:
+                if i[2][0] == child:
+                    old_child = i  # (cost , counter , (node, actions))
+                    break
             # If the child is not explored and not in the frontier
-            if child not in explored and child not in [i[1] for i in frontier]:
+            if child not in explored and not old_child:
                 # Add the child to the frontier and actions needed to reach it
                 frontier.push(
                     (child, actions + [action]),
                     action_cost + c,
                 )
-            elif child in [i[1] for i in frontier]:
-                for i in frontier:
-                    if i[1] == child:
-                        if i[0] > action_cost:
-                            frontier.pushpop(
-                                (child, actions + [action]),
-                                action_cost + c,
-                            )
+            elif old_child:
+                if old_child[0] > action_cost + c:
+                    frontier.elements.remove(old_child)
+                    heapq.heapify(frontier.elements)
+                    frontier.push(
+                        (child, actions + [action]),
+                        action_cost + c,
+                    )
     return None
 
 
@@ -150,10 +164,11 @@ def BestFirstSearch(
     NotImplemented()
 
 
-h = []
-heapq.heapify(h)
-heapq.heappush(h, (5, "write code"))
-heapq.heappush(h, (7, "release product"))
-heapq.heappush(h, (1, "write spec"))
-heapq.heappush(h, (1, "create tests"))
-print(heapq.heappop(h))
+# h = []
+# heapq.heapify(h)
+# heapq.heappush(h, (5, "write code"))
+# heapq.heappush(h, (7, "release product"))
+# heapq.heappush(h, (1, "write spec"))
+# heapq.heappush(h, (1, "create tests"))
+# n, w = heapq.heappop(h)
+# print(type(heapq.heappop(h)))
