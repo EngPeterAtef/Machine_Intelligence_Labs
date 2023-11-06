@@ -154,14 +154,108 @@ def AStarSearch(
     problem: Problem[S, A], initial_state: S, heuristic: HeuristicFunction
 ) -> Solution:
     # TODO: ADD YOUR CODE HERE
-    NotImplemented()
+    if problem.is_goal(initial_state):
+        return []
+    # Queue of nodes and the actions needed to reach them
+    frontier = CustomPriorityQueue()
+    frontier.push((initial_state, []), 0 + heuristic(problem, initial_state))
+    # Set of explored nodes
+    explored = set()
+    # While there are nodes to explore
+    while frontier:
+        # Get the next node
+        res = frontier.pop()
+        if not res:
+            return None
+        (c, _, (node, actions)) = res
+        # If the node is the goal
+        if problem.is_goal(node):
+            return actions
+        # add to the explored set
+        explored.add(node)
+        # For each action in the problem
+        for action in problem.get_actions(node):
+            # Get the child node
+            child = problem.get_successor(node, action)
+            # calculate the action cost
+            action_cost = problem.get_cost(node, action)
+            # search for the child in the frontier
+            old_child = None
+            for i in frontier.elements:
+                if i[2][0] == child:
+                    old_child = i  # (cost , counter , (node, actions))
+                    break
+            # calculate the child cost = action cost + cost to reach the child + heuristic
+            child_cost = action_cost + c + heuristic(problem, child)
+            # If the child is not explored and not in the frontier
+            if child not in explored and not old_child:
+                # Add the child to the frontier and actions needed to reach it
+                frontier.push(
+                    (child, actions + [action]),
+                    child_cost,
+                )
+            elif old_child:
+                if old_child[0] > child_cost:
+                    frontier.elements.remove(old_child)
+                    heapq.heapify(frontier.elements)
+                    frontier.push(
+                        (child, actions + [action]),
+                        child_cost,
+                    )
+    return None
 
 
 def BestFirstSearch(
     problem: Problem[S, A], initial_state: S, heuristic: HeuristicFunction
 ) -> Solution:
     # TODO: ADD YOUR CODE HERE
-    NotImplemented()
+    if problem.is_goal(initial_state):
+        return []
+    # Queue of nodes and the actions needed to reach them
+    frontier = CustomPriorityQueue()
+    frontier.push((initial_state, []), heuristic(problem, initial_state))
+    # Set of explored nodes
+    explored = set()
+    # While there are nodes to explore
+    while frontier:
+        # Get the next node
+        res = frontier.pop()
+        if not res:
+            return None
+        (_, _, (node, actions)) = res
+        # If the node is the goal
+        if problem.is_goal(node):
+            return actions
+        # add to the explored set
+        explored.add(node)
+        # For each action in the problem
+        for action in problem.get_actions(node):
+            # Get the child node
+            child = problem.get_successor(node, action)
+            # calculate the heuristic cost
+            child_cost = heuristic(problem, child)
+            # search for the child in the frontier
+            old_child = None
+            for i in frontier.elements:
+                if i[2][0] == child:
+                    old_child = i  # (cost , counter , (node, actions))
+                    break
+            # If the child is not explored and not in the frontier
+            if child not in explored and not old_child:
+                # Add the child to the frontier and actions needed to reach it
+                frontier.push(
+                    (child, actions + [action]),
+                    child_cost,
+                )
+            elif old_child:
+                if old_child[0] > child_cost:
+                    frontier.elements.remove(old_child)
+                    heapq.heapify(frontier.elements)
+                    frontier.push(
+                        (child, actions + [action]),
+                        child_cost,
+                    )
+    return None
 
 
 # h = []
