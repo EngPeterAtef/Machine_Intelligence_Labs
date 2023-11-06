@@ -186,7 +186,7 @@ def AStarSearch(
                     old_child = i  # (cost , counter , (node, actions))
                     break
             # calculate the child cost = action cost + cost to reach the child + heuristic
-            child_cost = action_cost + c + heuristic(problem, child)
+            child_cost = action_cost + c + heuristic(problem, child) - heuristic(problem, node)
             # If the child is not explored and not in the frontier
             if child not in explored and not old_child:
                 # Add the child to the frontier and actions needed to reach it
@@ -257,12 +257,3 @@ def BestFirstSearch(
                     )
     return None
 
-
-# h = []
-# heapq.heapify(h)
-# heapq.heappush(h, (5, "write code"))
-# heapq.heappush(h, (7, "release product"))
-# heapq.heappush(h, (1, "write spec"))
-# heapq.heappush(h, (1, "create tests"))
-# n, w = heapq.heappop(h)
-# print(type(heapq.heappop(h)))
