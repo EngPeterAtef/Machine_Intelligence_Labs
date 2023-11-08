@@ -126,27 +126,30 @@ def UniformCostSearch(problem: Problem[S, A], initial_state: S) -> Solution:
             child = problem.get_successor(node, action)
             # calculate the action cost
             action_cost = problem.get_cost(node, action)
+            child_cost = action_cost + c
             # search for the child in the frontier
-            old_child = None
-            for i in frontier.elements:
-                if i[2][0] == child:
-                    old_child = i  # (cost , counter , (node, actions))
-                    break
+            # old_child = None
+            # old_child_index = None
+            # for i in range(len(frontier.elements)):
+            #     if frontier.elements[i][2][0] == child:
+            #         old_child = frontier.elements[i]  # (cost , counter , (node, actions))
+            #         old_child_index = i
+            #         break
             # If the child is not explored and not in the frontier
-            if child not in explored and not old_child:
+            if child not in explored:  # and not old_child:
                 # Add the child to the frontier and actions needed to reach it
                 frontier.push(
                     (child, actions + [action]),
-                    action_cost + c,
+                    child_cost,
                 )
-            elif old_child:
-                if old_child[0] > action_cost + c:
-                    frontier.elements.remove(old_child)
-                    heapq.heapify(frontier.elements)
-                    frontier.push(
-                        (child, actions + [action]),
-                        action_cost + c,
-                    )
+            # elif old_child:
+            #     if old_child[0] > child_cost:
+            #         frontier.elements[old_child_index] = (
+            #             child_cost,
+            #             old_child[1],
+            #             (child, actions + [action]),
+            #         )
+            #         heapq.heapify(frontier.elements)
     return None
 
 
@@ -158,7 +161,10 @@ def AStarSearch(
         return []
     # Queue of nodes and the actions needed to reach them
     frontier = CustomPriorityQueue()
-    frontier.push((initial_state, []), 0 + heuristic(problem, initial_state))
+    frontier.push(
+        (initial_state, []),
+        heuristic(problem, initial_state),
+    )
     # Set of explored nodes
     explored = set()
     # While there are nodes to explore
@@ -185,11 +191,14 @@ def AStarSearch(
                 if i[2][0] == child:
                     old_child = i  # (cost , counter , (node, actions))
                     break
-            # calculate the child cost = action cost + cost to reach the child + heuristic
-            child_cost = action_cost + c + heuristic(problem, child) - heuristic(problem, node)
+            # calculate the child cost = action cost + cost to reach the child + heuristic - heuristic of the parent
+            child_cost = (
+                action_cost + c + heuristic(problem, child) - heuristic(problem, node)
+            )
             # If the child is not explored and not in the frontier
             if child not in explored and not old_child:
                 # Add the child to the frontier and actions needed to reach it
+
                 frontier.push(
                     (child, actions + [action]),
                     child_cost,
@@ -256,4 +265,3 @@ def BestFirstSearch(
                         child_cost,
                     )
     return None
-
