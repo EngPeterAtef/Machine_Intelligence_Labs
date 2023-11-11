@@ -54,6 +54,8 @@ def BreadthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
     while frontier:
         # Get the next node
         node, actions = frontier.popleft()
+        if node in explored:
+            continue
         # add to the explored set
         explored.add(node)
         # For each action in the problem
@@ -61,7 +63,7 @@ def BreadthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
             # Get the child node
             child = problem.get_successor(node, action)
             # If the child is not explored and not in the frontier
-            if child not in explored and child not in [i[0] for i in frontier]:
+            if child not in explored:  # and child not in [i[0] for i in frontier]:
                 # If the child is the goal
                 if problem.is_goal(child):
                     return actions + [action]
@@ -83,6 +85,8 @@ def DepthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
     while frontier:
         # Get the next node
         node, actions = frontier.pop()
+        if node in explored:
+            continue
         # If the node is the goal
         if problem.is_goal(node):
             return actions
@@ -93,7 +97,7 @@ def DepthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
             # Get the child node
             child = problem.get_successor(node, action)
             # If the child is not explored and not in the frontier
-            if child not in explored and child not in [i[0] for i in frontier]:
+            if child not in explored:  # and child not in [i[0] for i in frontier]:
                 # Add the child to the frontier and actions needed to reach it
                 frontier.append((child, actions + [action]))
     return None
@@ -115,6 +119,8 @@ def UniformCostSearch(problem: Problem[S, A], initial_state: S) -> Solution:
         if not res:
             return None
         (c, _, (node, actions)) = res
+        if node in explored:
+            continue
         # If the node is the goal
         if problem.is_goal(node):
             return actions
@@ -128,28 +134,12 @@ def UniformCostSearch(problem: Problem[S, A], initial_state: S) -> Solution:
             action_cost = problem.get_cost(node, action)
             child_cost = action_cost + c
             # search for the child in the frontier
-            # old_child = None
-            # old_child_index = None
-            # for i in range(len(frontier.elements)):
-            #     if frontier.elements[i][2][0] == child:
-            #         old_child = frontier.elements[i]  # (cost , counter , (node, actions))
-            #         old_child_index = i
-            #         break
-            # If the child is not explored and not in the frontier
             if child not in explored:  # and not old_child:
                 # Add the child to the frontier and actions needed to reach it
                 frontier.push(
                     (child, actions + [action]),
                     child_cost,
                 )
-            # elif old_child:
-            #     if old_child[0] > child_cost:
-            #         frontier.elements[old_child_index] = (
-            #             child_cost,
-            #             old_child[1],
-            #             (child, actions + [action]),
-            #         )
-            #         heapq.heapify(frontier.elements)
     return None
 
 
@@ -174,6 +164,8 @@ def AStarSearch(
         if not res:
             return None
         (c, _, (node, actions)) = res
+        if node in explored:
+            continue
         # If the node is the goal
         if problem.is_goal(node):
             return actions
@@ -185,32 +177,17 @@ def AStarSearch(
             child = problem.get_successor(node, action)
             # calculate the action cost
             action_cost = problem.get_cost(node, action)
-            # search for the child in the frontier
-            old_child = None
-            for i in frontier.elements:
-                if i[2][0] == child:
-                    old_child = i  # (cost , counter , (node, actions))
-                    break
             # calculate the child cost = action cost + cost to reach the child + heuristic - heuristic of the parent
             child_cost = (
                 action_cost + c + heuristic(problem, child) - heuristic(problem, node)
             )
             # If the child is not explored and not in the frontier
-            if child not in explored and not old_child:
+            if child not in explored:  # and not old_child:
                 # Add the child to the frontier and actions needed to reach it
-
                 frontier.push(
                     (child, actions + [action]),
                     child_cost,
                 )
-            elif old_child:
-                if old_child[0] > child_cost:
-                    frontier.elements.remove(old_child)
-                    heapq.heapify(frontier.elements)
-                    frontier.push(
-                        (child, actions + [action]),
-                        child_cost,
-                    )
     return None
 
 
@@ -232,6 +209,8 @@ def BestFirstSearch(
         if not res:
             return None
         (_, _, (node, actions)) = res
+        if node in explored:
+            continue
         # If the node is the goal
         if problem.is_goal(node):
             return actions
@@ -244,24 +223,24 @@ def BestFirstSearch(
             # calculate the heuristic cost
             child_cost = heuristic(problem, child)
             # search for the child in the frontier
-            old_child = None
-            for i in frontier.elements:
-                if i[2][0] == child:
-                    old_child = i  # (cost , counter , (node, actions))
-                    break
+            # old_child = None
+            # for i in frontier.elements:
+            #     if i[2][0] == child:
+            #         old_child = i  # (cost , counter , (node, actions))
+            #         break
             # If the child is not explored and not in the frontier
-            if child not in explored and not old_child:
+            if child not in explored:  # and not old_child:
                 # Add the child to the frontier and actions needed to reach it
                 frontier.push(
                     (child, actions + [action]),
                     child_cost,
                 )
-            elif old_child:
-                if old_child[0] > child_cost:
-                    frontier.elements.remove(old_child)
-                    heapq.heapify(frontier.elements)
-                    frontier.push(
-                        (child, actions + [action]),
-                        child_cost,
-                    )
+            # elif old_child:
+            #     if old_child[0] > child_cost:
+            #         frontier.elements.remove(old_child)
+            #         heapq.heapify(frontier.elements)
+            #         frontier.push(
+            #             (child, actions + [action]),
+            #             child_cost,
+            #         )
     return None
