@@ -21,11 +21,28 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
     # This could be useful if you want to store the results heavy computations that can be cached and used across multiple calls of this function
     # The heuristic is the distance between crates and goals
     # print(problem.cache())
+    # return (
+    #     max(
+    #         manhattan_distance(crate, goal)
+    #         for crate in state.crates
+    #         for goal in problem.layout.goals
+    #     )
+    #     - 1
+    # )
+    # check for deadlocks ( crates cannot be moved anymore)
+    for crate in state.crates:
+        if all(
+            crate + direction.to_vector() not in problem.layout.walkable
+            for direction in Direction
+        ):
+            return float("inf")
+
+    # Calculate heuristic as the distance between crates and goals
     return (
         max(
             manhattan_distance(crate, goal)
             for crate in state.crates
-            for goal in state.layout.goals
+            for goal in problem.layout.goals
         )
         - 1
     )
