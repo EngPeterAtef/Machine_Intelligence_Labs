@@ -134,12 +134,26 @@ def UniformCostSearch(problem: Problem[S, A], initial_state: S) -> Solution:
             action_cost = problem.get_cost(node, action)
             child_cost = action_cost + c
             # search for the child in the frontier
+            # old_child = None
+            # for i in frontier.elements:
+            #     if i[2][0] == child:
+            #         old_child = i  # (cost , counter , (node, actions))
+            #         break
+            # If the child is not explored and not in the frontier
             if child not in explored:  # and not old_child:
                 # Add the child to the frontier and actions needed to reach it
                 frontier.push(
                     (child, actions + [action]),
                     child_cost,
                 )
+            # elif old_child:
+            #     if old_child[0] > child_cost:
+            #         frontier.elements.remove(old_child)
+            #         heapq.heapify(frontier.elements)
+            #         frontier.push(
+            #             (child, actions + [action]),
+            #             child_cost,
+            #         )
     return None
 
 
@@ -181,6 +195,12 @@ def AStarSearch(
             child_cost = (
                 action_cost + c + heuristic(problem, child) - heuristic(problem, node)
             )
+            # search for the child in the frontier
+            # old_child = None
+            # for i in frontier.elements:
+            #     if i[2][0] == child:
+            #         old_child = i  # (cost , counter , (node, actions))
+            #         break
             # If the child is not explored and not in the frontier
             if child not in explored:  # and not old_child:
                 # Add the child to the frontier and actions needed to reach it
@@ -188,6 +208,14 @@ def AStarSearch(
                     (child, actions + [action]),
                     child_cost,
                 )
+            # elif old_child:
+            #     if old_child[0] > child_cost:
+            #         frontier.elements.remove(old_child)
+            #         heapq.heapify(frontier.elements)
+            #         frontier.push(
+            #             (child, actions + [action]),
+            #             child_cost,
+            #         )
     return None
 
 
