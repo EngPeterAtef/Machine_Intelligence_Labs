@@ -27,17 +27,14 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
 
     if sokoban_deadlock_heuristic(state):
         # print("Deadlock")
-        return weak_heuristic(problem, state)
+        return float("inf")
 
     # Calculate heuristic as the distance between crates and goals
-    return (
-        max(
-            manhattan_distance(crate, goal)
-            for crate in state.crates
-            for goal in problem.layout.goals
-        )
-        - 1
-    )
+    return min(
+        manhattan_distance(crate, goal)
+        for crate in state.crates
+        for goal in problem.layout.goals
+    ) + min(manhattan_distance(crate, state.player) for crate in state.crates)
 
 
 def sokoban_deadlock_heuristic(state: SokobanState) -> bool:
@@ -50,8 +47,7 @@ def sokoban_deadlock_heuristic(state: SokobanState) -> bool:
         x, y = crate.x, crate.y
         for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
             if (
-                Point(x + dx, y + dy) not in state.layout.goals
-                and Point(x + dx, y + dy) not in state.layout.walkable
+                Point(x + dx, y + dy) not in state.layout.walkable
                 and Point(x + dx, y + dy) in state.crates
                 and Point(x + dx, y + dy) != state.player
                 and x + dx >= 0
@@ -61,3 +57,63 @@ def sokoban_deadlock_heuristic(state: SokobanState) -> bool:
             ):
                 return True
     return False
+
+
+"""
+def is_deadlock(state: SokobanState):
+	height, width = state.layout.height, state.layout.width
+	boxes = state.crates
+	for box in boxes:  # corner deadlock
+		if ((state[box - 1] == '+' and state[box - width] == '+') or
+			(state[box + 1] == '+' and state[box + width] == '+') or
+			(state[box + 1] == '+' and state[box - width] == '+') or
+			(state[box - 1] == '+' and state[box + width] == '+')):
+			return True
+	double_box_positions = [
+		(0, -1, -width, -width - 1),
+		(0, 1, -width, -width + 1),
+		(0, -1, width - 1, width),
+		(0, 1, width + 1, width),
+	]
+	for bx, by in boxes:  # double box deadlock
+		box = bx * width + by
+		for pos in double_box_positions:
+			pos_set = set()
+			for dir in pos:
+				pos_set.add(state[box + dir])
+			if pos_set in ({'@', '+'}, {'@'}, {'@', '$'}, {'@', '$', '+'}):
+				return True
+	box = goal = 0
+	for i in range(width + 1, 2 * width - 1):  # too many boxes deadlock
+		if state[i] == '@':
+			box += 1
+		elif state[i] in 'X%':
+			goal += 1
+	if box > goal:
+		return True
+	box = goal = 0
+	for i in range(width * (height - 2) + 1, width * (height - 2) + width - 1):
+		if state[i] == '@':
+			box += 1
+		elif state[i] in 'X%':
+			goal += 1
+	if box > goal:
+		return True
+	box = goal = 0
+	for i in range(width + 1, width * (height - 1) + 1, width):
+		if state[i] == '@':
+			box += 1
+		elif state[i] in 'X%':
+			goal += 1
+	if box > goal:
+		return True
+	box = goal = 0
+	for i in range(2 * width - 2, width * height - 2, width):
+		if state[i] == '@':
+			box += 1
+		elif state[i] in 'X%':
+			goal += 1
+	if box > goal:
+		return True
+	return False
+"""
