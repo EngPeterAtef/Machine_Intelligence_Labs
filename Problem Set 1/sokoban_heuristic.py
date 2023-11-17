@@ -20,12 +20,8 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
     # NOTE: you can use problem.cache() to get a dictionary in which you can store information that will persist between calls of this function
     # This could be useful if you want to store the results heavy computations that can be cached and used across multiple calls of this function
     # The heuristic is the distance between crates and goals
-    flag = True
-    for crate in state.crates:
-        if crate not in state.layout.goals:
-            flag = False
 
-    if flag:
+    if problem.is_goal(state):
         # print("All crates are in goals")
         return 0
 
@@ -44,81 +40,22 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
     )
 
 
-def sokoban_deadlock_heuristic(state: SokobanState):
+def sokoban_deadlock_heuristic(state: SokobanState) -> bool:
     """
     A heuristic function to detect deadlocks in a Sokoban game.
     INPUT: a sokoban state
     OUTPUT: True if the state is a deadlock, False otherwise.
     """
-    # Check for dead square deadlocks
-    for box in state.crates:
-        if (
-            (box.x + 1, box.y) not in state.layout.walkable
-            and (box.x, box.y + 1) not in state.layout.walkable
-            and (box.x + 1, box.y + 1) not in state.layout.walkable
-        ):
-            return True
-        if (
-            (box.x - 1, box.y) not in state.layout.walkable
-            and (box.x, box.y + 1) not in state.layout.walkable
-            and (box.x - 1, box.y + 1) not in state.layout.walkable
-        ):
-            return True
-        if (
-            (box.x + 1, box.y) not in state.layout.walkable
-            and (box.x, box.y - 1) not in state.layout.walkable
-            and (box.x + 1, box.y - 1) not in state.layout.walkable
-        ):
-            return True
-        if (
-            (box.x - 1, box.y) not in state.layout.walkable
-            and (box.x, box.y - 1) not in state.layout.walkable
-            and (box.x - 1, box.y - 1) not in state.layout.walkable
-        ):
-            return True
-    # Check for freeze deadlocks
-    if box not in state.layout.goals and all(
-        (box.x + dx, box.y + dy) not in state.layout.walkable
-        for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0))
-    ):
-        return True
-    # Check for corral deadlocks
-    if box not in state.layout.goals and all(
-        (box.x + dx, box.y + dy) not in state.layout.walkable
-        for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0))
-    ):
-        if all(
-            any(
-                (box.x + dx, box.y + dy) in state.layout.goals
-                for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0))
-            )
-            for box in state.crates
-        ):
-            return True
-
-    # Check for closed diagonal deadlocks
-    if box not in state.layout.goals and all(
-        (box.x + dx, box.y + dy) not in state.layout.walkable
-        for dx, dy in ((1, 1), (1, -1), (-1, 1), (-1, -1))
-    ):
-        if all(
-            (box.x + dx, box.y) not in state.layout.walkable
-            and (box.x, box.y + dy) not in state.layout.walkable
-            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))
-        ):
-            return True
-
-    # Check for bipartite deadlocks
-    if box not in state.layout.goals:
-        if all(
-            (box.x + dx, box.y + dy) not in state.layout.walkable
-            for dx, dy in ((0, 1), (0, -1))
-        ):
-            if any((box.x + dx, box.y) in state.layout.goals for dx in (-1, 1)):
+    for crate in state.crates:
+        x, y = crate.x, crate.y
+        for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+            if (
+                Point(x + dx, y + dy) not in state.layout.goals
+                and Point(x + dx, y + dy) not in state.layout.walkable
+                and Point(x + dx, y + dy) in state.crates
+                and Point(x + dx, y + dy) != state.player
+                and x+dx >= 0 and x+dx < state.layout.width
+                and y+dy >= 0 and y+dy < state.layout.height
+            ):
                 return True
-        if all(
-            (box.x + dx, box.y + dy) not in state.layout.walkable
-            for dx, dy in ((1, 0), (-1, 0))
-        ):
-            if any((box.x, box.y + dy) in state.layout.goals for dy in (-1, 1)):
-                return True
+    return False
