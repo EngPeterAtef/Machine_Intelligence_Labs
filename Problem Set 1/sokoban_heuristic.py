@@ -27,7 +27,7 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
 
     if sokoban_deadlock_heuristic(state):
         # print("Deadlock")
-        weak_heuristic(problem, state)
+        return weak_heuristic(problem, state)
 
     # Calculate heuristic as the distance between crates and goals
     return (
@@ -54,8 +54,10 @@ def sokoban_deadlock_heuristic(state: SokobanState) -> bool:
                 and Point(x + dx, y + dy) not in state.layout.walkable
                 and Point(x + dx, y + dy) in state.crates
                 and Point(x + dx, y + dy) != state.player
-                and x+dx >= 0 and x+dx < state.layout.width
-                and y+dy >= 0 and y+dy < state.layout.height
+                and x + dx >= 0
+                and x + dx < state.layout.width
+                and y + dy >= 0
+                and y + dy < state.layout.height
             ):
                 return True
     return False
