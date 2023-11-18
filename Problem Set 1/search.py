@@ -185,8 +185,6 @@ def AStarSearch(
         if not res:
             return None
         (c, _, (node, actions)) = res
-        # if node in explored:
-        #     continue
         # remove from the temp frontier
         temp_frontier.pop(node)
         # If the node is the goal
