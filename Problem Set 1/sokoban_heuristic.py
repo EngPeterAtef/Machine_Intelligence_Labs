@@ -22,15 +22,13 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
     # The heuristic is the distance between crates and goals
 
 	if problem.is_goal(state):
-		print(problem.cache()["count"])
 		return 0
 	if state == problem.initial_state:
 		problem.cache()["count"] = 0
         
 	if sokoban_deadlock_heuristic(state):
 		problem.cache()["count"] += 1
-		print(problem.cache()["count"])
-		# print("Deadlock")
+		# print(problem.cache()["count"])
 		# print(state.__str__())
 		return float("inf")
 
