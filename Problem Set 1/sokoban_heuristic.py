@@ -23,15 +23,15 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
 
     if problem.is_goal(state):
         return 0
-    if state == problem.initial_state:
-        problem.cache()["count"] = 0
+    # if state == problem.initial_state:
+        # problem.cache()["count"] = 0
+        # problem.cache()["is_deadlock"] = False
 
     if sokoban_deadlock_heuristic(state):
-        problem.cache()["count"] += 1
+        # problem.cache()["count"] += 1
         # print(problem.cache()["count"])
         # print(state.__str__())
         return float("inf")
-
     # Calculate heuristic as the distance between crates and goals
     return min(
         manhattan_distance(crate, goal)
@@ -40,81 +40,88 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
     ) + min(manhattan_distance(crate, state.player) for crate in state.crates)
 
 
-def sokoban_deadlock_heuristic(state: SokobanState) -> bool:
-    """
-    A heuristic function to detect deadlocks in a Sokoban game.
-    INPUT: a sokoban state
-    OUTPUT: True if the state is a deadlock, False otherwise.
-    """
+def deadlock_on_corners(state: SokobanState):
     # deadlock on corners
     for crate in state.crates:
         x, y = crate.x, crate.y
-        if (
-            Point(x, y - 1) not in state.layout.walkable
-            and Point(x, y - 1) not in state.layout.goals
+        case1 = (
+            Point(x, y - 1)
+            not in state.layout.walkable
+            # and Point(x, y - 1) not in state.layout.goals
         ) and (
-            Point(x + 1, y) not in state.layout.walkable
-            and Point(x + 1, y) not in state.layout.goals
-        ):
-            print("Deadlock on corners1")
-            return True
-        if (
-            Point(x, y + 1) not in state.layout.walkable
-            and Point(x, y + 1) not in state.layout.goals
-        ) and (
-            Point(x + 1, y) not in state.layout.walkable
-            and Point(x + 1, y) not in state.layout.goals
-        ):
-            print("Deadlock on corners2")
-            return True
-        if (
-            Point(x, y - 1) not in state.layout.walkable
-            and Point(x, y - 1) not in state.layout.goals
-        ) and (
-            Point(x - 1, y) not in state.layout.walkable
-            and Point(x - 1, y) not in state.layout.goals
-        ):
-            print("Deadlock on corners3")
-            return True
-        if (
-            Point(x, y + 1) not in state.layout.walkable
-            and Point(x, y + 1) not in state.layout.goals
-        ) and (
-            Point(x - 1, y) not in state.layout.walkable
-            and Point(x - 1, y) not in state.layout.goals
-        ):
-            print("Deadlock on corners4")
-            return True
+            Point(x + 1, y)
+            not in state.layout.walkable
+            # and Point(x + 1, y) not in state.layout.goals
+        )
 
+        case2 = (
+            Point(x, y + 1)
+            not in state.layout.walkable
+            # and Point(x, y + 1) not in state.layout.goals
+        ) and (
+            Point(x + 1, y)
+            not in state.layout.walkable
+            # and Point(x + 1, y) not in state.layout.goals
+        )
+        case3 = (
+            Point(x, y - 1)
+            not in state.layout.walkable
+            # and Point(x, y - 1) not in state.layout.goals
+        ) and (
+            Point(x - 1, y)
+            not in state.layout.walkable
+            # and Point(x - 1, y) not in state.layout.goals
+        )
+        case4 = (
+            Point(x, y + 1)
+            not in state.layout.walkable
+            # and Point(x, y + 1) not in state.layout.goals
+        ) and (
+            Point(x - 1, y)
+            not in state.layout.walkable
+            # and Point(x - 1, y) not in state.layout.goals
+        )
+        if case1 or case2 or case3 or case4:
+            # print("Deadlock on corners")
+            return True
+    return False
+
+
+def deadlock_on_wall(state: SokobanState):
     # check on deadlock if there is a wall at any side of the box and the nearest goal is not in the same row or column so the box can't be pushed to the goal
     for crate in state.crates:
+        if crate in state.layout.goals:
+            continue
         x, y = crate.x, crate.y
-        if (
-            Point(x, y - 1) not in state.layout.walkable
-            or Point(x, y + 1) not in state.layout.walkable
-        ):
-            flag = True
+        # if there is a wall above or below the box
+        if y == 1 or y == state.layout.height - 2:
+            flag = True  # deadlock
+            # loop through all the goals to check if there is a goal in the same row
             for goal in state.layout.goals:
                 if goal.y == y and goal not in state.crates:
-                    for i in range(min(x, goal.x), max(x, goal.x)):
+                    if flag and abs(goal.x - x) == 1:
+                        flag = False
+                        break
+                    for i in range(min(x, goal.x) + 1, max(x, goal.x)):
                         if (
                             Point(i, y) in state.layout.walkable
                             or Point(i, y) in state.layout.goals
                         ) and Point(i, y) not in state.crates:
-                            flag = False
+                            flag = False  # no deadlock
                         else:
-                            flag = True
-                            break
-            print("can't go the goal1")
+                            flag = True  # deadlock
+                            # break
+            # print("can't go the goal1")
             return flag
-        if (
-            Point(x - 1, y) not in state.layout.walkable
-            or Point(x + 1, y) not in state.layout.walkable
-        ):
-            flag = True #deadlock
+            # if there is a wall on the left or right of the box
+        if x == 1 or x == state.layout.width - 2:
+            flag = True  # deadlock
             for goal in state.layout.goals:
                 if goal.x == x and goal not in state.crates:
-                    for i in range(min(y, goal.y), max(y, goal.y)):
+                    if flag and abs(goal.y - y) == 1:
+                        flag = False
+                        break
+                    for i in range(min(y, goal.y) + 1, max(y, goal.y)):
                         if (
                             Point(x, i) in state.layout.walkable
                             or Point(x, i) in state.layout.goals
@@ -122,104 +129,51 @@ def sokoban_deadlock_heuristic(state: SokobanState) -> bool:
                             flag = False
                         else:
                             flag = True
-                            break
-            print("can't go the goal2")
+                            # break
+            # print("can't go the goal2")
             return flag
+    return False
+
+
+def deadlock_on_2x2(state: SokobanState):
     # imagine there are 4 2x2 squares of 4 cells around each crate
     # if all 4 cells are walls or boxes, then the crate is in a deadlock
     for crate in state.crates:
-        x, y = crate.x, crate.y
-        # the crate is at the buttom right of the box and check on the 3 other locations
-        if (
-            (
-                Point(x - 1, y) not in state.layout.walkable
-                or Point(x - 1, y) in state.crates
-            )
-            and (
-                Point(x - 1, y + 1) not in state.layout.walkable
-                or Point(x - 1, y + 1) in state.crates
-            )
-            and (
-                Point(x, y + 1) not in state.layout.walkable
-                or Point(x, y + 1) in state.crates
-            )
-        ):
-            print("buttom right")
-            return True
-            # the crate is at the buttom left of the box and check on the 3 other locations
-        if (
-            (
-                Point(x + 1, y) not in state.layout.walkable
-                or Point(x + 1, y) in state.crates
-            )
-            and (
-                Point(x + 1, y + 1) not in state.layout.walkable
-                or Point(x + 1, y + 1) in state.crates
-            )
-            and (
-                Point(x, y + 1) not in state.layout.walkable
-                or Point(x, y + 1) in state.crates
-            )
-        ):
-            print("buttom left")
-            return True
-            # the crate is at the top right of the box and check on the 3 other locations
-        if (
-            (
-                Point(x - 1, y) not in state.layout.walkable
-                or Point(x - 1, y) in state.crates
-            )
-            and (
-                Point(x - 1, y - 1) not in state.layout.walkable
-                or Point(x - 1, y - 1) in state.crates
-            )
-            and (
-                Point(x, y - 1) not in state.layout.walkable
-                or Point(x, y - 1) in state.crates
-            )
-        ):
-            print("top right")
-            return True
-            # the crate is at the top left of the box and check on the 3 other locations
-        if (
-            (
-                Point(x + 1, y) not in state.layout.walkable
-                or Point(x + 1, y) in state.crates
-            )
-            and (
-                Point(x + 1, y - 1) not in state.layout.walkable
-                or Point(x + 1, y - 1) in state.crates
-            )
-            and (
-                Point(x, y - 1) not in state.layout.walkable
-                or Point(x, y - 1) in state.crates
-            )
-        ):
-            print("top left")
-            return True
-
-    # deadlock on walls	or boxes
-    # for crate in state.crates:
-    #     x, y = crate.x, crate.y
-    #     if (
-    #         (
-    #             Point(x, y - 1) not in state.layout.walkable
-    #             or Point(x, y - 1) in state.crates
-    #         )
-    #         and (
-    #             Point(x, y + 1) not in state.layout.walkable
-    #             or Point(x, y + 1) in state.crates
-    #         )
-    #         and (
-    #             Point(x + 1, y) not in state.layout.walkable
-    #             or Point(x + 1, y) in state.crates
-    #         )
-    #         and (
-    #             Point(x - 1, y) not in state.layout.walkable
-    #             or Point(x - 1, y) in state.crates
-    #         )
-    #     ):
-    #         # print("Deadlock on walls or boxes")
-    #         return True
-
+        for i in range(4):
+            x0, y0, x1, y1 = crate.x, crate.y, crate.x, crate.y
+            if i == 0:
+                x0 -= 1
+                y0 -= 1
+            elif i == 1:
+                x1 += 1
+                y0 -= 1
+            elif i == 2:
+                x0 -= 1
+                y1 += 1
+            else:
+                x1 += 1
+                y1 += 1
+            number_of_walls_and_boxes = 0
+            # loop to count the number of walls and boxes in the 4 2x2 squares
+            for i in range(x0, x1 + 1):
+                for j in range(y0, y1 + 1):
+                    if (
+                        Point(i, j) not in state.layout.walkable
+                        or Point(i, j) in state.crates
+                    ):
+                        number_of_walls_and_boxes += 1
+            if number_of_walls_and_boxes >= 4:
+                # print("Deadlock on 2x2")
+                return True
     return False
+
+
+def sokoban_deadlock_heuristic(state: SokobanState) -> bool:
+    """
+    A heuristic function to detect deadlocks in a Sokoban game.
+    INPUT: a sokoban state
+    OUTPUT: True if the state is a deadlock, False otherwise.
+    """
+    return (
+        deadlock_on_corners(state) or deadlock_on_wall(state) or deadlock_on_2x2(state)
+    )
