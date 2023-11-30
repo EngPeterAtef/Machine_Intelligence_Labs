@@ -177,7 +177,7 @@ def solve(problem: Problem) -> Optional[Assignment]:
             # add the value to to the variable in the new assignment
             new_assignmet[variable] = value
 
-            # create a copy of the domains to use in the forward checking
+            # create a copy of the domains to use in the forward checking because it will be passed by reference
             new_domains = domains.copy()
 
             # delete the varaible from the domains copy as it is assigned
