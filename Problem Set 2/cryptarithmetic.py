@@ -133,11 +133,11 @@ class CryptArithmeticProblem(Problem):
                         max_value_in_domain += str(max(problem.domains[letter[i]]))
                 problem.domains[letter] = set(range(int(max_value_in_domain) + 1))
 
-        for k, v in problem.domains.items():
-            print(k, max(v))
-            print("domain size",len(v))
-            # print("the domain",v)
-            print("-----------------------------------------------")
+        # for k, v in problem.domains.items():
+        #     print(k, max(v))
+        #     print("domain size",len(v))
+        #     # print("the domain",v)
+        #     print("-----------------------------------------------")
         # problem.constaints:   should contain a list of constraint (either unary or binary constraints).
         problem.constraints = []
         """
@@ -193,7 +193,7 @@ class CryptArithmeticProblem(Problem):
         for i in range(
             1, min(len(LHS0), len(LHS1))
         ):  # loop over the shorter string (range(1, 2))
-            # B = BD[0]
+            # B = BD // 10
             problem.constraints.append(
                 BinaryConstraint(
                     (
@@ -203,7 +203,7 @@ class CryptArithmeticProblem(Problem):
                     lambda x, y: x == y // 10,
                 )
             )
-            # D = BD[1]
+            # D = BD % 10
             problem.constraints.append(
                 BinaryConstraint(
                     (
@@ -213,7 +213,7 @@ class CryptArithmeticProblem(Problem):
                     lambda x, y: x == y % 10,
                 )
             )
-            # BD = BDC0[0:2]
+            # BD = BDC0 // 10
             problem.constraints.append(
                 BinaryConstraint(
                     (
@@ -223,7 +223,7 @@ class CryptArithmeticProblem(Problem):
                     lambda x, y: x == y // 10,
                 )
             )
-            # C0 = BDC0[2:]
+            # C0 = BDC0 % 10
             problem.constraints.append(
                 BinaryConstraint(
                     (
@@ -238,7 +238,7 @@ class CryptArithmeticProblem(Problem):
                 BinaryConstraint(
                     (
                         RHS_REVERSED[i],
-                        "C" + str(i - 1) + RHS_REVERSED[i],
+                        "C" + str(i) + RHS_REVERSED[i],
                     ),
                     lambda x, y: x == y % 10,
                 )
@@ -248,12 +248,12 @@ class CryptArithmeticProblem(Problem):
                 BinaryConstraint(
                     (
                         "C" + str(i),
-                        RHS_REVERSED[i] + "C" + str(i - 1),
+                        "C" + str(i) + RHS_REVERSED[i],
                     ),
                     lambda x, y: x == y // 10,
                 )
             )
-            # BDC0 = C1H
+            # BDC0 == C1H
             problem.constraints.append(
                 BinaryConstraint(
                     (
@@ -292,7 +292,7 @@ class CryptArithmeticProblem(Problem):
                     BinaryConstraint(
                         (
                             RHS_REVERSED[i],
-                            "C" + str(i - 1) + RHS_REVERSED[i],
+                            "C" + str(i) + RHS_REVERSED[i],
                         ),
                         lambda x, y: x == y % 10,
                     )
@@ -302,12 +302,12 @@ class CryptArithmeticProblem(Problem):
                     BinaryConstraint(
                         (
                             "C" + str(i),
-                            RHS_REVERSED[i] + "C" + str(i - 1),
+                            "C" + str(i) + RHS_REVERSED[i],
                         ),
                         lambda x, y: x == y // 10,
                     )
                 )
-                # AC1 = C2G
+                # AC1 == C2G
                 problem.constraints.append(
                     BinaryConstraint(
                         (
@@ -343,7 +343,7 @@ class CryptArithmeticProblem(Problem):
                     BinaryConstraint(
                         (
                             RHS_REVERSED[i],
-                            "C" + str(i - 1) + RHS_REVERSED[i],
+                            "C" + str(i) + RHS_REVERSED[i],
                         ),
                         lambda x, y: x == y % 10,
                     )
@@ -353,12 +353,12 @@ class CryptArithmeticProblem(Problem):
                     BinaryConstraint(
                         (
                             "C" + str(i),
-                            RHS_REVERSED[i] + "C" + str(i - 1),
+                            "C" + str(i) + RHS_REVERSED[i],
                         ),
                         lambda x, y: x == y // 10,
                     )
                 )
-                # AC1 = C2G
+                # AC1 == C2G
                 problem.constraints.append(
                     BinaryConstraint(
                         (
@@ -369,24 +369,14 @@ class CryptArithmeticProblem(Problem):
                     )
                 )
 
-        # F = C2
-        problem.constraints.append(
-            BinaryConstraint(
-                (
-                    RHS_REVERSED[-1],
-                    "C" + str(len(RHS) - 2),
-                ),
-                lambda x, y: x == y,
-            )
-        )
-        # for c in problem.constraints:
-        #     # if unary constraint
-        #     if isinstance(c, UnaryConstraint):
-        #         print("UnaryConstraint", c.variable)
+        for c in problem.constraints:
+            # if unary constraint
+            if isinstance(c, UnaryConstraint):
+                print("UnaryConstraint", c.variable)
 
-        #     # if binary constraint
-        #     elif isinstance(c, BinaryConstraint):
-        #         print("BinaryConstraint", c.variables)
+            # if binary constraint
+            elif isinstance(c, BinaryConstraint):
+                print("BinaryConstraint", c.variables)
         return problem
 
     # Read a cryptarithmetic puzzle from a file
