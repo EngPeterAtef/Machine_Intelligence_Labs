@@ -93,7 +93,7 @@ class CryptArithmeticProblem(Problem):
         problem.domains = {}
         for letter in problem.variables:
             # domian of carries Ci should be {0, 1}
-            if letter[0] == "C" and  len(letter) == 2 and letter[1].isnumeric():
+            if letter[0] == "C" and len(letter) == 2 and letter[1].isnumeric():
                 problem.domains[letter] = set(range(2))
                 continue
             elif len(letter) == 1:  # domain of letters should be {0, 1, ..., 9}
@@ -101,36 +101,43 @@ class CryptArithmeticProblem(Problem):
                 continue
             # add domain for the auxiliary variables. it should be pairs of the domain of the two letters
             # the domain of the auxiliary AB should be {domain of A, domain of B}
-            if len(letter) > 2:
+            if len(letter) > 2:  # BDC0 / C1H / AC1
                 problem.domains[letter] = set()
+                max_value_in_domain = ""
                 for i in range(len(letter)):
+                    # character 3adi
                     if (
                         letter[i].isalpha()
                         and i < len(letter) - 1
                         and letter[i + 1].isalpha()
                     ):
-                        for i in frozenset(problem.domains[letter[i]]):
-                            problem.domains[letter].add(i)
+                        max_value_in_domain += str(max(problem.domains[letter[i]]))
+                        # character bs fe a5er al letter
+                    elif letter[i].isalpha() and i == len(letter) - 1:
+                        max_value_in_domain += str(max(problem.domains[letter[i]]))
+                    # if carry
                     elif (
                         letter[i].isalpha()
                         and i < len(letter) - 1
                         and letter[i + 1].isnumeric()
                     ):
-                        for i in frozenset(problem.domains[letter[i] + letter[i + 1]]):
-                            problem.domains[letter].add(
-                                i
-                            )  # Carry inside auxiliary variable
-                    elif letter[i].isalpha() and i == len(letter) - 1:
-                        for i in frozenset(problem.domains[letter[i]]):
-                            problem.domains[letter].add(i)
+                        max_value_in_domain += str(
+                            max(problem.domains[letter[i] + letter[i + 1]])
+                        )  # Carry inside auxiliary variable
+                problem.domains[letter] = set(range(int(max_value_in_domain) + 1))
             elif len(letter) == 2:
                 problem.domains[letter] = set()
+                max_value_in_domain = ""
                 for i in range(len(letter)):
                     if letter[i].isalpha():
-                        for i in frozenset(problem.domains[letter[i]]):
-                            problem.domains[letter].add(i)
+                        max_value_in_domain += str(max(problem.domains[letter[i]]))
+                problem.domains[letter] = set(range(int(max_value_in_domain) + 1))
 
-        print("problem.domains", problem.domains)
+        for k, v in problem.domains.items():
+            print(k, max(v))
+            print("domain size",len(v))
+            # print("the domain",v)
+            print("-----------------------------------------------")
         # problem.constaints:   should contain a list of constraint (either unary or binary constraints).
         problem.constraints = []
         """
@@ -372,14 +379,14 @@ class CryptArithmeticProblem(Problem):
                 lambda x, y: x == y,
             )
         )
-        for c in problem.constraints:
-            # if unary constraint
-            if isinstance(c, UnaryConstraint):
-                print("UnaryConstraint", c.variable, c.condition)
-            
-            # if binary constraint
-            elif isinstance(c, BinaryConstraint):
-                print("BinaryConstraint", c.variables, c.condition)
+        # for c in problem.constraints:
+        #     # if unary constraint
+        #     if isinstance(c, UnaryConstraint):
+        #         print("UnaryConstraint", c.variable)
+
+        #     # if binary constraint
+        #     elif isinstance(c, BinaryConstraint):
+        #         print("BinaryConstraint", c.variables)
         return problem
 
     # Read a cryptarithmetic puzzle from a file
