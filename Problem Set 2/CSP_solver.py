@@ -37,6 +37,7 @@ def minimum_remaining_values(problem: Problem, domains: Dict[str, set]) -> str:
         for index, variable in enumerate(problem.variables)
         if variable in domains
     )
+    # print("MRV", variable)
     return variable
 
 
@@ -60,8 +61,10 @@ def forward_checking(
     # TODO: Write this function
     solvable = True
     for constraint in problem.constraints:
-        if isinstance(constraint, BinaryConstraint) and assigned_variable in constraint.variables:
-
+        if (
+            isinstance(constraint, BinaryConstraint)
+            and assigned_variable in constraint.variables
+        ):
             # get the other variable
             other_variable = constraint.get_other(assigned_variable)
 
@@ -69,18 +72,33 @@ def forward_checking(
             if other_variable not in domains.keys():
                 continue
 
+            # if other_variable == "U":
+            #     print("U domain reduction")
+            #     print("old_domain", domains[other_variable])
             # update the other variable's domain to only include the values that satisfy the binary constraint with the assigned variable.
             new_domain = {
                 value
                 for value in domains[other_variable]
-                if constraint.condition(assigned_value, value)
+                if (
+                    constraint.variables[0] == assigned_variable
+                    and constraint.condition(assigned_value, value)
+                )
+                or (
+                    constraint.variables[1] == assigned_variable
+                    and constraint.condition(value, assigned_value)
+                )
             }
             domains[other_variable] = new_domain
-
-            # if the domain of the other variable is empty, return False => the problem is not solvable 
-            if not new_domain:
+            # print("other_variable", other_variable)
+            # print("old_domain", domains[other_variable])
+            # print("new_domain", new_domain)
+            # if other_variable == "U":
+            #     print("new_domain", new_domain)
+            # if the domain of the other variable is empty, return False => the problem is not solvable
+            if len(new_domain) == 0:
                 solvable = False
                 break
+
     return solvable
 
 
@@ -136,7 +154,9 @@ def least_restraining_values(
                         removed_values[value] += 1
 
     # sort values by number of removed values in ascending order and by alphabetical order in case of tie
-    return sorted(removed_values, key=lambda x: (removed_values[x], x))
+    res = sorted(removed_values, key=lambda x: (removed_values[x], x))
+    # print("LRV", res)
+    return res
 
 
 # This function should solve CSP problems using backtracking search with forward checking.
@@ -161,6 +181,7 @@ def solve(problem: Problem) -> Optional[Assignment]:
     def recursive_search(
         assignment: Assignment, domains: Dict[str, set]
     ) -> Optional[Assignment]:
+        # print("assignment", assignment)
         # check if the assignment is complete
         if problem.is_complete(assignment):
             # if it is, return the assignment
@@ -173,7 +194,6 @@ def solve(problem: Problem) -> Optional[Assignment]:
         for value in least_restraining_values(problem, variable, domains):
             # create a copy of the assignment to not modify the original assignment as it is passed by reference
             new_assignmet = assignment.copy()
-
             # add the value to to the variable in the new assignment
             new_assignmet[variable] = value
 
@@ -182,7 +202,7 @@ def solve(problem: Problem) -> Optional[Assignment]:
 
             # delete the varaible from the domains copy as it is assigned
             del new_domains[variable]
-
+            # print(f"variable: {variable} = {value}")
             # check if the forward checking is satisfied
             if forward_checking(problem, variable, value, new_domains):
                 # if it is, call the recursive search with the new assignment and the new domains

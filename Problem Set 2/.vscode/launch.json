@@ -16,8 +16,8 @@
             "name": "Python: Play CryptArithmetic",
             "type": "python",
             "request": "launch",
-            "program": "play_crypt.py",
-            "args": ["./puzzles/puzzle_5.txt", "-a=backtrack"],
+            "program": "play_cryptaithmetic.py",
+            "args": ["./puzzles/puzzle_1.txt", "-a=backtrack"],
             "console": "integratedTerminal"
         },
         {
