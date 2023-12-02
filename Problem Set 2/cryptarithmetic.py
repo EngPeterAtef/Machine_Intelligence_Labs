@@ -64,6 +64,9 @@ class CryptArithmeticProblem(Problem):
             # add auxiliary variables consisting of the RHS letters and carry variables
             problem.variables.append("C" + str(i) + RHS_REVERSED[i])
 
+        if len(RHS)==max(len(LHS0),len(LHS1)):
+            problem.variables.append("C" + str(len(RHS)-1))
+            problem.variables.append("C" + str(len(RHS)-1) + RHS_REVERSED[-1])
         # IMPORTANT NOTE: You can only add unary and binary constraints. So, you are allowed to add auxiliary
         # variables to solve this problem. But make sure the there is a variable for each letter in the puzzle. So if you
         # combine the letters A and B into an auxiliary variable AB, you still have to include A and B in your variables list.
@@ -79,13 +82,14 @@ class CryptArithmeticProblem(Problem):
             problem.variables.append(
                 LHS0_REVERSED[i] + LHS1_REVERSED[i] + "C" + str(i - 1)
             )
-
-        if len(LHS0) > len(LHS1):
-            # combine the letters of the two strings with carry
-            problem.variables.append(LHS0_REVERSED[-1] + "C" + str(len(LHS1) - 1))
-        elif len(LHS0) < len(LHS1):
-            # combine the letters of the two strings with carry
-            problem.variables.append(LHS1_REVERSED[-1] + "C" + str(len(LHS0) - 1))
+        
+        for i in range(min(len(LHS0), len(LHS1)), max(len(LHS0), len(LHS1))):
+            if len(LHS0) > len(LHS1):
+                # combine the letters of the two strings with carry
+                problem.variables.append(LHS0_REVERSED[i] + "C" + str(i - 1))
+            elif len(LHS0) < len(LHS1):
+                # combine the letters of the two strings with carry
+                problem.variables.append(LHS1_REVERSED[i] + "C" + str(i - 1))
 
         # print("problem.variables", problem.variables)
         # problem.domains:      should be dictionary that maps each variable (str) to its domain (set of values)
@@ -135,7 +139,7 @@ class CryptArithmeticProblem(Problem):
 
         # for k, v in problem.domains.items():
         #     print(k, max(v))
-        #     print("domain size",len(v))
+        #     print("domain size", len(v))
         #     # print("the domain",v)
         #     print("-----------------------------------------------")
         # problem.constaints:   should contain a list of constraint (either unary or binary constraints).
@@ -298,6 +302,8 @@ class CryptArithmeticProblem(Problem):
         for i in range(min(len(LHS0), len(LHS1)), max(len(LHS0), len(LHS1))):
             if len(LHS0) > len(LHS1):
                 # A = AC1 // 10
+                # print("current i", i)
+                # print("LHS0_REVERSED[i]", LHS0_REVERSED[i])
                 problem.constraints.append(
                     BinaryConstraint(
                         (
@@ -402,15 +408,16 @@ class CryptArithmeticProblem(Problem):
                 )
 
         # F = C2
-        problem.constraints.append(
-            BinaryConstraint(
-                (
-                    RHS_REVERSED[-1],
-                    "C" + str(len(RHS) - 2),
-                ),
-                lambda x, y: x == y,
+        if len(RHS) > max(len(LHS0), len(LHS1)):
+            problem.constraints.append(
+                BinaryConstraint(
+                    (
+                        RHS_REVERSED[-1],
+                        "C" + str(len(RHS) - 2),
+                    ),
+                    lambda x, y: x == y,
+                )
             )
-        )
         # for c in problem.constraints:
         #     # if unary constraint
         #     if isinstance(c, UnaryConstraint):
