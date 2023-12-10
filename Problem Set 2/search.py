@@ -6,36 +6,20 @@ from helpers.utils import NotImplemented
 import math
 
 # All search functions take a problem, a state, a heuristic function and the maximum search depth.
-# If the maximum search depth is -1, then there should be no depth cutoff (The expansion should not stop before reaching a terminal state)
+# If the maximum search depth is -1, then there should be no depth cutoff (The expansion should not stop before reaching a terminal state) 
 
 # All the search functions should return the expected tree value and the best action to take based on the search results
 
-
 # This is a simple search function that looks 1-step ahead and returns the action that lead to highest heuristic value.
 # This algorithm is bad if the heuristic function is weak. That is why we use minimax search to look ahead for many steps.
-def greedy(
-    game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1
-) -> Tuple[float, A]:
-    # the turn of the player that starts the game
+def greedy(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1) -> Tuple[float, A]:
     agent = game.get_turn(state)
-
-    # check if the state is terminal
+    
     terminal, values = game.is_terminal(state)
-    # if the state is terminal, return the state utility
-    if terminal:
-        return values[agent], None
+    if terminal: return values[agent], None
 
-    # get the actions and the successors of the state
-    actions_states = [
-        (action, game.get_successor(state, action))
-        for action in game.get_actions(state)
-    ]
-    # get the maximum heuristic value and the correct action
-    value, _, action = max(
-        (heuristic(game, state, agent), -index, action)
-        for index, (action, state) in enumerate(actions_states)
-    )
-    # return the maximum heuristic value and the correct action
+    actions_states = [(action, game.get_successor(state, action)) for action in game.get_actions(state)]
+    value, _, action = max((heuristic(game, state, agent), -index, action) for index, (action , state) in enumerate(actions_states))
     return value, action
 
 
@@ -46,66 +30,25 @@ def greedy(
 # and if it is > 0, it should be a min node. Also remember that game.is_terminal(s), returns the values
 # for all the agents. So to get the value for the player (which acts at the max nodes), you need to
 # get values[0].
-def minimax(
-    game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1
-) -> Tuple[float, A]:
+def minimax(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1) -> Tuple[float, A]:
     # TODO: Write this function
 
     # the turn of the player that starts the game
     orignal_turn = game.get_turn(state)
-
-    # this function returns the value of the state and the correct action
-    def value(state, depth):
-        # check if the state is terminal
-        terminal, values = game.is_terminal(state)
-
-        # if the state is terminal, return the state utility
-        if terminal:
-            return values[orignal_turn], None
-
-        # if the depth is equal to the maximum depth, return the heuristic value
-        if depth == max_depth:
-            return heuristic(game, state, orignal_turn), None
-
-        # get the current turn
-        agent = game.get_turn(state)
-
-        # if the current turn is 0, return the maximum value of the successors
-        if agent == 0:
-            return max_value(state, depth)
-
-        # if the current turn is not 0, return the minimum value of the successors
-        else:
-            return min_value(state, depth)
-
-    # this function returns the minimum value of the successors
-    def min_value(state, depth):
-        # get the actions and the successors of the state
-        actions_states = [
-            (action, game.get_successor(state, action))
-            for action in game.get_actions(state)
-        ]
-
-        # initialize the minimum value to infinity
-        min_val = math.inf
-
-        # initialize the correct action to None
-        correct_action = None
-
-        # loop through the actions and the successors
-        for action, state in actions_states:
-            # get the value of the successor
-            successor_value = value(state, depth + 1)[0]
-
-            # if the successor value is less than or equal the minimum value, update the minimum value and the correct action
-            if successor_value <= min_val:
-                min_val, correct_action = successor_value, action
-
-        # return the minimum value and the correct action
-        return min_val, correct_action
-
+    
     # this function returns the maximum value of the successors
     def max_value(state, depth):
+        # print(f"{' '*depth}max_value start at depth {depth}")
+        # check if the state is terminal
+        is_terminal, player_values_for_terminal_state = game.is_terminal(state)
+
+        # if the state is terminal, return the state utility
+        if is_terminal:
+            return player_values_for_terminal_state[orignal_turn], None
+
+        # if the depth is equal to the maximum depth, return the heuristic value to calulate the value of a given state for a certain agent within a certain game.
+        if depth == max_depth:
+            return heuristic(game, state, orignal_turn), None
         # get the actions and the successors of the state
         actions_states = [
             (action, game.get_successor(state, action))
@@ -120,25 +63,78 @@ def minimax(
 
         # loop through the actions and the successors
         for action, state in actions_states:
+            agent = game.get_turn(state)
+            # print(f"{' '*depth}agent", agent)
             # get the value of the successor
-            successor_value = value(state, depth + 1)[0]
+            if agent == 0:
+                successor_value = max_value(state, depth + 1)[0]
+            else:
+                successor_value = min_value(state, depth + 1)[0]
 
             # if the successor value is greater than the maximum value, update the maximum value and the correct action
             if successor_value > max_val:
                 max_val, correct_action = successor_value, action
 
+        # print(f"{' '*depth}max_value end at depth {depth}")
         # return the maximum value and the correct action
         return max_val, correct_action
+    
+    # this function returns the minimum value of the successors
+    def min_value(state, depth):
+        # print(f"{' '*depth}min_value start at depth {depth}")
+        # check if the state is terminal
+        is_terminal, player_values_for_terminal_state = game.is_terminal(state)
 
-    # return the value of the state and the correct action
-    return value(state, 0)
+        # if the state is terminal, return the state utility
+        if is_terminal:
+            return player_values_for_terminal_state[orignal_turn], None
+
+        # if the depth is equal to the maximum depth, return the heuristic value to calulate the value of a given state for a certain agent within a certain game.
+        if depth == max_depth:
+            return heuristic(game, state, orignal_turn), None
+        # get the actions and the successors of the state
+        actions_successors = [
+            (action, game.get_successor(state, action))
+            for action in game.get_actions(state)
+        ]
+
+        # initialize the minimum value to infinity
+        min_val = math.inf
+
+        # initialize the correct action to None
+        chosen_action = None
+
+        # loop through the actions and the successors
+        for action, state in actions_successors:
+            agent = game.get_turn(state)
+            # print(f"{' '*depth}agent", agent)
+            # get the value of the successor
+            if agent == 0:
+                successor_value = max_value(state, depth + 1)[0]
+            else:
+                successor_value = min_value(state, depth + 1)[0]
+
+            # if the successor value is less than or equal the minimum value, update the minimum value and the correct action
+            if successor_value <= min_val:
+                min_val, chosen_action = successor_value, action
+
+        # print(f"{' '*depth}min_value end at depth {depth}")
+        # return the minimum value and the correct action
+        return min_val, chosen_action
+
+
+    # if the current turn is 0, return the maximum value of the successors
+    if orignal_turn == 0:
+        return max_value(state, 0)
+
+    # any other agent returns the minimum value of the successors
+    else:
+        return min_value(state, 0)
 
 
 # Apply Alpha Beta pruning and return the tree value and the best action
 # Hint: Read the hint for minimax.
-def alphabeta(
-    game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1
-) -> Tuple[float, A]:
+def alphabeta(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1) -> Tuple[float, A]:
     # TODO: Write this function
 
     # find player that starts the game
@@ -252,9 +248,7 @@ def alphabeta(
 
 # Apply Alpha Beta pruning with move ordering and return the tree value and the best action
 # Hint: Read the hint for minimax.
-def alphabeta_with_move_ordering(
-    game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1
-) -> Tuple[float, A]:
+def alphabeta_with_move_ordering(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1) -> Tuple[float, A]:
     # TODO: Write this function
     # get the turn of the player that starts the game
     orignal_turn = game.get_turn(state)
@@ -374,9 +368,7 @@ def alphabeta_with_move_ordering(
 # Apply Expectimax search and return the tree value and the best action
 # Hint: Read the hint for minimax, but note that the monsters (turn > 0) do not act as min nodes anymore,
 # they now act as chance nodes (they act randomly).
-def expectimax(
-    game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1
-) -> Tuple[float, A]:
+def expectimax(game: Game[S, A], state: S, heuristic: HeuristicFunction, max_depth: int = -1) -> Tuple[float, A]:
     # TODO: Write this function
     # get the turn of the player that starts the game
     orignal_turn = game.get_turn(state)
