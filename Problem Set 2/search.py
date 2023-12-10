@@ -266,11 +266,8 @@ def alphabeta(
         # return the maximum value and the correct action
         return max_val, correct_action
 
-    # get the current turn
-    agent = game.get_turn(state)
-
     # if the current turn is 0, return the maximum value of the successors
-    if agent == 0:
+    if orignal_turn == 0:
         return max_value(state, 0, -math.inf, math.inf)
 
     # if the current turn is not 0, return the minimum value of the successors
@@ -287,8 +284,8 @@ def alphabeta_with_move_ordering(
     # get the turn of the player that starts the game
     orignal_turn = game.get_turn(state)
 
-    # this function returns the value of the state and the correct action
-    def value(state, depth, alpha, beta):
+    # this function returns the minimum value of the successors
+    def min_value(state, depth, alpha, beta):
         # check if the state is terminal
         terminal, values = game.is_terminal(state)
 
@@ -299,20 +296,6 @@ def alphabeta_with_move_ordering(
         # if the depth is equal to the maximum depth, return the heuristic value
         if depth == max_depth:
             return heuristic(game, state, orignal_turn), None
-
-        # get the current turn
-        agent = game.get_turn(state)
-
-        # if the current turn is 0, return the maximum value of the successors
-        if agent == 0:
-            return max_value(state, depth, alpha, beta)
-
-        # if the current turn is not 0, return the minimum value of the successors
-        else:
-            return min_value(state, depth, alpha, beta)
-
-    # this function returns the minimum value of the successors
-    def min_value(state, depth, alpha, beta):
         # get the actions and the successors of the state
         actions_states = [
             (action, game.get_successor(state, action))
@@ -320,7 +303,7 @@ def alphabeta_with_move_ordering(
         ]
 
         # sort actions_states by heuristic value in ascending order in a stable way
-        actions_states.sort(key=lambda x: heuristic(game, x[1], 0))
+        actions_states.sort(key=lambda x: heuristic(game, x[1], orignal_turn))
 
         # initialize the minimum value to infinity
         min_val = math.inf
@@ -331,8 +314,15 @@ def alphabeta_with_move_ordering(
         # loop through the actions and the successors
         for action, state in actions_states:
             # get the value of the successor
-            successor_value = value(state, depth + 1, alpha, beta)[0]
+            agent = game.get_turn(state)
 
+            # if the current turn is 0, return the maximum value of the successors
+            if agent == 0:
+                successor_value = max_value(state, depth + 1, alpha, beta)[0]
+
+            # if the current turn is not 0, return the minimum value of the successors
+            else:
+                successor_value = min_value(state, depth + 1, alpha, beta)[0]
             # if the successor value is less than or equal the minimum value, update the minimum value and the correct action
             if successor_value <= min_val:
                 min_val, correct_action = successor_value, action
@@ -355,6 +345,16 @@ def alphabeta_with_move_ordering(
 
     # this function returns the maximum value of the successors
     def max_value(state, depth, alpha, beta):
+        # check if the state is terminal
+        terminal, values = game.is_terminal(state)
+
+        # if the state is terminal, return the state utility
+        if terminal:
+            return values[orignal_turn], None
+
+        # if the depth is equal to the maximum depth, return the heuristic value
+        if depth == max_depth:
+            return heuristic(game, state, orignal_turn), None
         # get the actions and the successors of the state
         actions_states = [
             (action, game.get_successor(state, action))
@@ -362,7 +362,9 @@ def alphabeta_with_move_ordering(
         ]
 
         # sort actions_states by heuristic value in descending order in a stable way
-        actions_states.sort(key=lambda x: heuristic(game, x[1], 0), reverse=True)
+        actions_states.sort(
+            key=lambda x: heuristic(game, x[1], orignal_turn), reverse=True
+        )
 
         # initialize the maximum value to negative infinity
         max_val = -math.inf
@@ -373,8 +375,15 @@ def alphabeta_with_move_ordering(
         # loop through the actions and the successors
         for action, state in actions_states:
             # get the value of the successor
-            successor_value = value(state, depth + 1, alpha, beta)[0]
+            agent = game.get_turn(state)
 
+            # if the current turn is 0, return the maximum value of the successors
+            if agent == 0:
+                successor_value = max_value(state, depth + 1, alpha, beta)[0]
+
+            # if the current turn is not 0, return the minimum value of the successors
+            else:
+                successor_value = min_value(state, depth + 1, alpha, beta)[0]
             # if the successor value is greater than the maximum value, update the maximum value and the correct action
             if successor_value > max_val:
                 max_val, correct_action = successor_value, action
@@ -395,8 +404,13 @@ def alphabeta_with_move_ordering(
         # return the maximum value and the correct action
         return max_val, correct_action
 
-    # return the value of the state and the correct action
-    return value(state, 0, -math.inf, math.inf)
+    # if the current turn is 0, return the maximum value of the successors
+    if orignal_turn == 0:
+        return max_value(state, 0, -math.inf, math.inf)
+
+    # if the current turn is not 0, return the minimum value of the successors
+    else:
+        return min_value(state, 0, -math.inf, math.inf)
 
 
 # Apply Expectimax search and return the tree value and the best action
