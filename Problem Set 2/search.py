@@ -423,8 +423,8 @@ def expectimax(
     # get the turn of the player that starts the game
     orignal_turn = game.get_turn(state)
 
-    # this function returns the value of the state and the correct action
-    def value(state, depth):
+    # this function returns the expected value of the successors
+    def expected_value(state, depth):
         # check if the state is terminal
         terminal, values = game.is_terminal(state)
 
@@ -435,20 +435,6 @@ def expectimax(
         # if the depth is equal to the maximum depth, return the heuristic value
         if depth == max_depth:
             return heuristic(game, state, orignal_turn), None
-
-        # get the current turn
-        agent = game.get_turn(state)
-
-        # if the current turn is 0, return the maximum value of the successors
-        if agent == 0:
-            return max_value(state, depth)
-
-        # if the current turn is not 0, return the expected value of the successors
-        else:
-            return expected_value(state, depth)
-
-    # this function returns the expected value of the successors
-    def expected_value(state, depth):
         # get the actions and the successors of the state
         actions_states = [
             (action, game.get_successor(state, action))
@@ -461,7 +447,7 @@ def expectimax(
         # loop through the actions and the successors
         for _, state in actions_states:
             # get the value of the successor
-            successor_value = value(state, depth + 1)[0]
+            successor_value = max_value(state, depth + 1)[0]
 
             # update the expected value by adding the successor value to the expected value
             expected_val += successor_value
@@ -471,6 +457,16 @@ def expectimax(
 
     # this function returns the maximum value of the successors
     def max_value(state, depth):
+        # check if the state is terminal
+        terminal, values = game.is_terminal(state)
+
+        # if the state is terminal, return the state utility
+        if terminal:
+            return values[orignal_turn], None
+
+        # if the depth is equal to the maximum depth, return the heuristic value
+        if depth == max_depth:
+            return heuristic(game, state, orignal_turn), None
         # get the actions and the successors of the state
         actions_states = [
             (action, game.get_successor(state, action))
@@ -486,7 +482,11 @@ def expectimax(
         # loop through the actions and the successors
         for action, state in actions_states:
             # get the value of the successor
-            successor_value = value(state, depth + 1)[0]
+            agent = game.get_turn(state)
+            if agent == 0:
+                successor_value = max_value(state, depth + 1)[0]
+            else:
+                successor_value = expected_value(state, depth + 1)[0]
 
             # if the successor value is greater than the maximum value, update the maximum value and the correct action
             if successor_value > max_val:
@@ -496,4 +496,10 @@ def expectimax(
         return max_val, correct_action
 
     # return the value of the state and the correct action
-    return value(state, 0)
+    # if the current turn is 0, return the maximum value of the successors
+    if orignal_turn == 0:
+        return max_value(state, 0)
+
+    # if the current turn is not 0, return the expected value of the successors
+    else:
+        return expected_value(state, 0)
