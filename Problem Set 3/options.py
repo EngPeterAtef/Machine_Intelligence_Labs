@@ -53,4 +53,4 @@ def question2_6():
     # to make the agent seek the exit as fast as possible,
     # we will make the living reward large negative number
     # and keep the environment deterministic with noise 0
-    return {"noise": 0.0, "discount_factor": 1.0, "living_reward": -10}
+    return {"noise": 0.0, "discount_factor": 1.0, "living_reward": -20}
