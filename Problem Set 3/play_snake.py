@@ -2,7 +2,7 @@ import time
 from snake import SnakeEnv, SnakeObservation
 from agents import HumanAgent, RandomAgent
 from value_iteration import ValueIterationAgent
-from policy_iteration import PolicyIterationAgent
+# from policy_iteration import PolicyIterationAgent
 from reinforcement_learning import SARSALearningAgent, QLearningAgent, ApproximateQLearningAgent
 import argparse
 
@@ -17,6 +17,11 @@ def create_agent(env: SnakeEnv, args: argparse.Namespace):
         # This function reads the action from the user (human)
         def snake_user_action(env: SnakeEnv, state: SnakeObservation) -> int:
             possible_actions = env.actions()
+            # print("Possible Actions:", possible_actions)
+            # env_temp = SnakeEnv(env.width, env.height)
+            # env_temp.snake = list(state.snake)
+            # env_temp.direction = state.direction
+            # env_temp.apple = state.apple
             while True:
                 user_input = input("Enter action (WASD or Nothing): ").strip().lower()
                 action = {
@@ -27,6 +32,14 @@ def create_agent(env: SnakeEnv, args: argparse.Namespace):
                     '': Direction.NONE
                 }.get(user_input)
                 if action in possible_actions:
+                    # Remove it later
+                    # observation, reward, done, info = env_temp.step(action)
+                    # print("Reward:", reward)
+                    # print("Done:", done)
+                    # print("Info:", info)
+                    # print("Observation:",observation)
+                    # print("Temp Environment:")
+                    # env_temp.render()
                     return action
                 else:
                     print("Invalid Action")

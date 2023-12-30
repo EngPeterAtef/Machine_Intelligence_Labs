@@ -78,7 +78,11 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
             self.rng.seed(seed) # Initialize the random generator using the seed
         # TODO add your code here
         # IMPORTANT NOTE: Define the snake before calling generate_random_apple
-        NotImplemented()
+        # NotImplemented()
+        self.snake = [Point(self.width // 2, self.height // 2)]
+        self.direction = Direction.LEFT
+        self.apple = self.generate_random_apple()
+
 
         return SnakeObservation(tuple(self.snake), self.direction, self.apple)
 
@@ -92,7 +96,21 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
         # TODO add your code here
         # a snake can wrap around the grid
         # NOTE: The action order does not matter
-        NotImplemented()
+        # NotImplemented()
+        # get the possible actions based on the current state
+        possible_actions = []
+        if len(self.snake) != self.width * self.height:
+            if self.direction != Direction.RIGHT and self.direction != Direction.LEFT:
+                possible_actions.append(Direction.LEFT)
+            if self.direction != Direction.LEFT and self.direction != Direction.RIGHT:
+                possible_actions.append(Direction.RIGHT)
+            if self.direction != Direction.DOWN and self.direction != Direction.UP:
+                possible_actions.append(Direction.UP)
+            if self.direction != Direction.UP and self.direction != Direction.DOWN:
+                possible_actions.append(Direction.DOWN)
+        
+        possible_actions.append(Direction.NONE)
+        return possible_actions
 
     def step(self, action: Direction) -> \
             Tuple[SnakeObservation, float, bool, Dict]:
@@ -110,12 +128,57 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
             - info (Dict): A dictionary containing any extra information. You can keep it empty.
         """
         # TODO Complete the following function
-        NotImplemented()
-
+        # NotImplemented()
+        # print("Before:", self.snake, self.direction, self.apple)
+        # print("Action:", action)
         done = False
         reward = 0
+        # apply the action
+        if action == Direction.LEFT:
+            if self.direction != Direction.RIGHT:
+                self.direction = Direction.LEFT
+        elif action == Direction.RIGHT:
+            if self.direction != Direction.LEFT:
+                self.direction = Direction.RIGHT
+        elif action == Direction.UP:
+            if self.direction != Direction.DOWN:
+                self.direction = Direction.UP
+        elif action == Direction.DOWN:
+            if self.direction != Direction.UP:
+                self.direction = Direction.DOWN
+        # move the snake
+        head = self.snake[0]
+        if self.direction == Direction.LEFT:
+            head = Point((head.x - 1) % self.width, head.y)
+        elif self.direction == Direction.RIGHT:
+            head = Point((head.x + 1) % self.width, head.y)
+        elif self.direction == Direction.UP:
+            head = Point(head.x, (head.y - 1) % self.height)
+        elif self.direction == Direction.DOWN:
+            head = Point(head.x, (head.y + 1) % self.height)
+        # check if the snake bites itself
+        if head in self.snake:
+            done = True
+            reward += -100
+        try:
+            # check if the snake eats the apple
+            if head == self.apple:
+                self.snake.insert(0, head)
+                reward += 1
+                self.apple = self.generate_random_apple()
+            else:
+                self.snake.insert(0, head)
+                self.snake.pop()
+        except:
+            pass
+        # check if the snake wins
+        if len(self.snake) == self.width * self.height:
+            done = True
+            reward += 100
         observation = SnakeObservation(tuple(self.snake), self.direction, self.apple)
-        
+        # print("Reward:", reward)
+        # print("Done:", done)
+        # print("Observation:",observation)
         return observation, reward, done, {}
 
     ###########################
